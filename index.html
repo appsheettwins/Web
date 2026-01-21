@@ -1,11 +1,41 @@
 <!DOCTYPE html>
-
 <html>
-   <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-      <base target="_top">
-   </head>
-   <body>
-      <iframe style="position: absolute;top: 0;left: 0;width: 100%;height: 100%;border: 0;" src="https://script.google.com/macros/s/AKfycbzwi_NB8sd10eqOjEdA7HsLjiI34nPAtDAGtDo7Hu-m/dev"></iframe>
-   </body>
+<head>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+    <h2>กรอกข้อมูล</h2>
+    <form id="myForm">
+        ชื่อ: <input type="text" id="name"><br>
+        รายละเอียด: <input type="text" id="detail"><br>
+        <button type="button" onclick="submitData()">บันทึกข้อมูล</button>
+    </form>
+
+    <script>
+        async function main() {
+            await liff.init({ liffId: "YOUR_LIFF_ID" }); // ใส่ LIFF ID ของคุณ
+            if (!liff.isLoggedIn()) {
+                liff.login();
+            }
+        }
+        main();
+
+        async function submitData() {
+            const profile = await liff.getProfile();
+            const formData = {
+                userId: profile.userId,
+                name: document.getElementById('name').value,
+                detail: document.getElementById('detail').value
+            };
+
+            // ส่งข้อมูลไปที่ Web App URL ของ Google Apps Script
+            fetch("YOUR_GAS_WEB_APP_URL", {
+                method: "POST",
+                body: JSON.stringify(formData)
+            }).then(() => {
+                liff.closeWindow(); // บันทึกเสร็จแล้วปิดหน้าต่าง LIFF ทันที
+            });
+        }
+    </script>
+</body>
 </html>
