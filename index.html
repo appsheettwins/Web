@@ -1,41 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <base target="_top">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Kanit', sans-serif; padding: 20px; }
+        .card-main { background: white; padding: 25px; border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); max-width: 450px; margin: auto; }
+        .hidden { display: none !important; }
+        .summary-box { background: #f0fff4; border-left: 6px solid #22c55e; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .btn-add-new { background-color: #007bff; color: white; font-weight: bold; border: none; padding: 15px; border-radius: 10px; width: 100%; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,123,255,0.3); }
+        label { font-weight: 500; color: #444; margin-bottom: 5px; }
+    </style>
 </head>
 <body>
-    <h2>กรอกข้อมูล</h2>
-    <form id="myForm">
-        ชื่อ: <input type="text" id="name"><br>
-        รายละเอียด: <input type="text" id="detail"><br>
-        <button type="button" onclick="submitData()">บันทึกข้อมูล</button>
-    </form>
 
-    <script>
-        async function main() {
-            await liff.init({ liffId: "YOUR_LIFF_ID" }); // ใส่ LIFF ID ของคุณ
-            if (!liff.isLoggedIn()) {
-                liff.login();
-            }
+<div class="card-main">
+    <div id="section-form">
+        <h4 class="text-center mb-4">📝 บันทึกข้อมูล</h4>
+        <form id="mainForm" onsubmit="event.preventDefault(); handleForm(this);">
+            
+            <input type="hidden" name="lineUserId" id="lineUserId" value="N/A">
+
+            <div class="mb-3">
+                <label>ชื่อ-นามสกุล</label>
+                <input type="text" name="name" class="form-control" placeholder="ระบุชื่อของคุณ" required>
+            </div>
+            <div class="mb-3">
+                <label>เบอร์โทรศัพท์</label>
+                <input type="tel" name="phone" class="form-control" placeholder="08x-xxxxxxx" required>
+            </div>
+            <div class="mb-3">
+                <label>กิจกรรม</label>
+                <select name="option" id="main-opt" class="form-select" onchange="updateSub(this.value)" required>
+                    <option value="" disabled selected>เลือกกิจกรรม...</option>
+                    <option value="ธรรมยาตรา">ธรรมยาตรา</option>
+                    <option value="จุดประทีป">จุดประทีป</option>
+                    <option value="ตักบาตร">ตักบาตร</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>รายการย่อย</label>
+                <select name="sub_option" id="sub-opt" class="form-select" required disabled>
+                    <option value="">กรุณาเลือกกิจกรรมก่อน</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label>รายละเอียดเพิ่มเติม</label>
+                <textarea name="details" class="form-control" rows="2" placeholder="ระบุรายละเอียดเพิ่มเติม (ถ้ามี)"></textarea>
+            </div>
+            
+            <button type="submit" id="submitBtn" class="btn btn-success w-100 p-2 mt-2 fw-bold">
+                บันทึกข้อมูล
+            </button>
+            <div id="lineStatus" class="text-center small mt-2 text-muted">กำลังตรวจสอบการเชื่อมต่อ LINE...</div>
+        </form>
+    </div>
+
+    <div id="section-loading" class="hidden text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-3 text-muted">กำลังบันทึกข้อมูล...</p>
+    </div>
+
+    <div id="section-success" class="hidden">
+        <div class="text-center mb-4">
+            <h3 class="text-success fw-bold">✅ บันทึกสำเร็จ!</h3>
+        </div>
+        <div class="summary-box">
+            <p class="mb-2"><strong>👤 ชื่อ:</strong> <span id="view-name"></span></p>
+            <p class="mb-2"><strong>📞 เบอร์:</strong> <span id="view-phone"></span></p> 
+            <p class="mb-0"><strong>📍 รายการ:</strong> <span id="view-sub"></span></p>
+        </div>
+        <button type="button" onclick="backToForm()" class="btn-add-new shadow">➕ เพิ่มข้อมูลใหม่</button>
+    </div>
+</div>
+
+<script>
+
+    const subData = {
+        'ธรรมยาตรา': ['3 ม.ค. โลตัสแลนด์', '7 ม.ค. คลองบางนางแท่น', '11 ม.ค. วัดสองพี่น้อง', '14 ม.ค. วัดโบสถ์บน','18 ม.ค. บางปลา'],
+        'จุดประทีป': ['B1', 'B2', 'B3'],
+        'ตักบาตร': ['C1', 'C2', 'C3', 'C4', 'C5']
+    };
+
+async function initLiff() {
+    try {
+        await liff.init({ liffId: "2008933743-UuRrgT1t" });
+
+        if (!liff.isLoggedIn()) {
+            liff.login();
+            return;
         }
-        main();
 
-        async function submitData() {
-            const profile = await liff.getProfile();
-            const formData = {
-                userId: profile.userId,
-                name: document.getElementById('name').value,
-                detail: document.getElementById('detail').value
-            };
+        const profile = await liff.getProfile();
+        document.getElementById('lineUserId').value = profile.userId;
+        document.getElementById('lineStatus').innerText = 'เชื่อมต่อ LINE แล้ว';
 
-            // ส่งข้อมูลไปที่ Web App URL ของ Google Apps Script
-            fetch("YOUR_GAS_WEB_APP_URL", {
-                method: "POST",
-                body: JSON.stringify(formData)
-            }).then(() => {
-                liff.closeWindow(); // บันทึกเสร็จแล้วปิดหน้าต่าง LIFF ทันที
-            });
+    } catch (err) {
+        document.getElementById('lineStatus').innerText = 'ไม่สามารถเชื่อมต่อ LINE';
+        console.error(err);
+    }
+}
+
+window.onload = initLiff;
+
+    function updateSub(val) {
+        const sub = document.getElementById('sub-opt');
+        sub.innerHTML = '<option value="" disabled selected>เลือกรายการย่อย...</option>';
+        if (subData[val]) {
+            sub.disabled = false;
+            subData[val].forEach(i => sub.add(new Option(i, i)));
         }
-    </script>
+    }
+
+    function handleForm(form) {
+        document.getElementById('view-name').innerText = form.name.value;
+        document.getElementById('view-phone').innerText = form.phone.value;
+        document.getElementById('view-sub').innerText = form.sub_option.value;
+
+        document.getElementById('section-form').classList.add('hidden');
+        document.getElementById('section-loading').classList.remove('hidden');
+
+        google.script.run
+            .withSuccessHandler(() => {
+                document.getElementById('section-loading').classList.add('hidden');
+                document.getElementById('section-success').classList.remove('hidden');
+            })
+            .withFailureHandler(err => {
+                alert("เกิดข้อผิดพลาด: " + err);
+                document.getElementById('section-loading').classList.add('hidden');
+                document.getElementById('section-form').classList.remove('hidden');
+            })
+            .processForm(form);
+    }
+
+    function backToForm() {
+        document.getElementById('mainForm').reset();
+        document.getElementById('sub-opt').disabled = true;
+        document.getElementById('section-success').classList.add('hidden');
+        document.getElementById('section-form').classList.remove('hidden');
+    }
+</script>
 </body>
 </html>
