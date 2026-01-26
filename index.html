@@ -129,14 +129,12 @@
         }
 
         .cert-header {
-            font-size: 2.5em;
             color: #8b4513;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
         .cert-body {
-            font-size: 1.3em;
             line-height: 1.8;
             color: #333;
             margin: 30px 0;
@@ -256,29 +254,9 @@
 
         <div id="certificateSection" class="card hidden">
             <div class="certificate" id="certificate">
-                <div class="cert-header">
-                    ใบอนุโมทนาบัตร<br>
-                    ☸️ Certificate of Merit ☸️
-                </div>
-                
-                <div class="cert-body">
-                    ขอเป็นสักขีพยานว่า<br>
-                    <div class="cert-name" id="certName"></div>
-                    ได้ร่วมทำบุญ<span id="certPurpose"></span><br>
-                    เป็นเงิน
-                    <div class="cert-amount" id="certAmount"></div>
-                    <div id="certNote"></div>
-                    <br>
-                    ขออานิสงส์แห่งบุญกุศลนี้<br>
-                    จงเป็นไปเพื่อความสุข ความเจริญ<br>
-                    และความสำเร็จในชีวิต<br>
-                    ตลอดกาลนานเทอญ
-                </div>
-
-                <div class="cert-footer">
-                    วันที่ <span id="certDate"></span><br>
-                    🙏 สาธุ สาธุ สาธุ 🙏
-                </div>
+                <div class="cert-header"></div>
+                <div class="cert-body"></div>
+                <div class="cert-footer"></div>
             </div>
 
             <div class="button-group">
@@ -290,11 +268,44 @@
 
     <script>
         const scriptUrl = 'https://script.google.com/macros/s/AKfycby9pH_JP8PpdGWzazdTjZw72hhsKnj_Uzd0TI-kHidhuK7qI4vmPMq-CspmaoHcKITQ/exec';
+        
+        let certificateConfig = {
+            headerText: 'ใบอนุโมทนาบัตร',
+            subHeaderText: '☸️ Certificate of Merit ☸️',
+            bodyText1: 'ขอเป็นสักขีพยานว่า',
+            bodyText2: 'ได้ร่วมทำบุญ{purpose}',
+            bodyText3: 'เป็นเงิน',
+            bodyText4: 'ขออานิสงส์แห่งบุญกุศลนี้',
+            bodyText5: 'จงเป็นไปเพื่อความสุข ความเจริญ',
+            bodyText6: 'และความสำเร็จในชีวิต',
+            bodyText7: 'ตลอดกาลนานเทอญ',
+            footerText1: 'วันที่',
+            footerText2: '🙏 สาธุ สาธุ สาธุ 🙏',
+            headerFontSize: '2.5em',
+            bodyFontSize: '1.3em',
+            nameFontSize: '1.5em',
+            amountFontSize: '1.8em',
+            footerFontSize: '1.1em'
+        };
 
-        // โหลดรายการวัตถุประสงค์เมื่อเปิดหน้าเว็บ
+        // โหลดรายการวัตถุประสงค์และการตั้งค่าเมื่อเปิดหน้าเว็บ
         window.addEventListener('load', function() {
             loadPurposes();
+            loadCertificateConfig();
         });
+
+        async function loadCertificateConfig() {
+            try {
+                const response = await fetch(scriptUrl + '?action=getConfig');
+                const data = await response.json();
+                
+                if (data.config) {
+                    certificateConfig = { ...certificateConfig, ...data.config };
+                }
+            } catch (error) {
+                console.error('Error loading config:', error);
+            }
+        }
 
         async function loadPurposes() {
             try {
@@ -341,24 +352,44 @@
             }
 
             // แสดงใบอนุโมทนาบัตร
-            document.getElementById('certName').textContent = donorName;
-            document.getElementById('certAmount').textContent = Number(amount).toLocaleString('th-TH') + ' บาท';
-            document.getElementById('certPurpose').textContent = purpose !== 'ทำบุญทั่วไป' ? purpose : '';
+            const certHeader = document.querySelector('.cert-header');
+            certHeader.style.fontSize = certificateConfig.headerFontSize;
+            certHeader.innerHTML = `${certificateConfig.headerText}<br>${certificateConfig.subHeaderText}`;
             
-            const noteDiv = document.getElementById('certNote');
-            if (note) {
-                noteDiv.innerHTML = `<br>หมายเหตุ: ${note}<br>`;
-            } else {
-                noteDiv.innerHTML = '';
-            }
-
+            const certBody = document.querySelector('.cert-body');
+            certBody.style.fontSize = certificateConfig.bodyFontSize;
+            
+            const purposeText = purpose !== 'ทำบุญทั่วไป' ? purpose : '';
+            const bodyText2 = certificateConfig.bodyText2.replace('{purpose}', purposeText);
+            
+            certBody.innerHTML = `
+                ${certificateConfig.bodyText1}<br>
+                <div class="cert-name" id="certName" style="font-size: ${certificateConfig.nameFontSize}">${donorName}</div>
+                ${bodyText2}<br>
+                ${certificateConfig.bodyText3}
+                <div class="cert-amount" id="certAmount" style="font-size: ${certificateConfig.amountFontSize}">${Number(amount).toLocaleString('th-TH')} บาท</div>
+                ${note ? `<br>หมายเหตุ: ${note}<br>` : ''}
+                <br>
+                ${certificateConfig.bodyText4}<br>
+                ${certificateConfig.bodyText5}<br>
+                ${certificateConfig.bodyText6}<br>
+                ${certificateConfig.bodyText7}
+            `;
+            
+            const certFooter = document.querySelector('.cert-footer');
+            certFooter.style.fontSize = certificateConfig.footerFontSize;
+            
             const today = new Date();
             const thaiDate = today.toLocaleDateString('th-TH', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
-            document.getElementById('certDate').textContent = thaiDate;
+            
+            certFooter.innerHTML = `
+                ${certificateConfig.footerText1} ${thaiDate}<br>
+                ${certificateConfig.footerText2}
+            `;
 
             document.getElementById('formSection').classList.add('hidden');
             document.getElementById('certificateSection').classList.remove('hidden');
@@ -413,8 +444,9 @@
             document.getElementById('certificateSection').classList.add('hidden');
             document.getElementById('successMessage').classList.add('hidden');
             
-            // โหลดรายการวัตถุประสงค์ใหม่
+            // โหลดรายการวัตถุประสงค์และการตั้งค่าใหม่
             loadPurposes();
+            loadCertificateConfig();
         }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
