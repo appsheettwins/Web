@@ -221,18 +221,6 @@
             <h1>🙏 ระบบออกใบอนุโมทนาบัตร</h1>
             <p class="subtitle">บันทึกการทำบุญและออกใบรับรองการอนุโมทนา</p>
 
-            <div class="setup-notice">
-                <strong>📝 วิธีการตั้งค่า Google Sheets API:</strong>
-                1. ไปที่ Google Apps Script: script.google.com<br>
-                2. สร้างโปรเจกต์ใหม่ และวาง code ที่ให้ไว้<br>
-                3. Deploy เป็น Web App และนำ URL มาใส่ด้านล่าง
-            </div>
-
-            <div class="form-group">
-                <label>🔗 Google Apps Script Web App URL:</label>
-                <input type="text" id="scriptUrl" value="https://script.google.com/macros/s/AKfycby9pH_JP8PpdGWzazdTjZw72hhsKnj_Uzd0TI-kHidhuK7qI4vmPMq-CspmaoHcKITQ/exec" placeholder="https://script.google.com/macros/s/YOUR_ID/exec">
-            </div>
-
             <div id="formSection">
                 <div class="form-group">
                     <label>ชื่อ-นามสกุล ผู้ทำบุญ:</label>
@@ -307,7 +295,7 @@
 
     <script>
         function generateCertificate() {
-            const scriptUrl = document.getElementById('scriptUrl').value.trim();
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycby9pH_JP8PpdGWzazdTjZw72hhsKnj_Uzd0TI-kHidhuK7qI4vmPMq-CspmaoHcKITQ/exec';
             const donorName = document.getElementById('donorName').value.trim();
             const amount = document.getElementById('amount').value;
             const purpose = document.getElementById('purpose').value;
@@ -342,9 +330,7 @@
             document.getElementById('certificateSection').classList.remove('hidden');
 
             // บันทึกลง Google Sheets
-            if (scriptUrl) {
-                saveToGoogleSheets(scriptUrl, donorName, amount, purpose, note, thaiDate);
-            }
+            saveToGoogleSheets(scriptUrl, donorName, amount, purpose, note, thaiDate);
         }
 
         async function saveToGoogleSheets(url, name, amount, purpose, note, date) {
