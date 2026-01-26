@@ -2,116 +2,154 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ใบอนุโมทนาบัตร</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบออกใบอนุโมทนาบัตร</title>
 
 <style>
-body{font-family:sans-serif;background:#f3f4f6;padding:20px}
-.card{background:#fff;padding:20px;border-radius:16px;max-width:500px;margin:auto}
-input,select,button{width:100%;padding:12px;margin-top:10px;font-size:16px}
-button{background:#6366f1;color:#fff;border:none;border-radius:12px}
-.top-admin{position:fixed;top:10px;right:10px}
+*{box-sizing:border-box;font-family:'Sarabun','Segoe UI',sans-serif}
+body{background:linear-gradient(135deg,#667eea,#764ba2);padding:14px}
+.container{max-width:900px;margin:auto}
+.card{background:#fff;border-radius:22px;padding:28px;margin-bottom:20px}
 .hidden{display:none}
+.top-admin{position:fixed;top:14px;right:14px;z-index:99}
+.top-admin button{
+background:#111;color:#fff;border:none;
+padding:10px 16px;border-radius:14px}
+input,select,button{width:100%;padding:14px;margin-top:10px;font-size:1.1em}
+button{background:#667eea;color:#fff;border:none;border-radius:14px}
+.btn-secondary{background:#6c757d}
 </style>
 </head>
 
 <body>
 
+<!-- ADMIN BUTTON -->
 <div class="top-admin">
 <button onclick="openLogin()">⚙️ Admin</button>
 </div>
 
-<!-- FORM -->
-<div class="card" id="form">
-<h3>ทำบุญ</h3>
-<input id="name" placeholder="ชื่อผู้ทำบุญ">
+<div class="container">
+
+<!-- FORM (เดิม) -->
+<div class="card" id="formSection">
+<h2 style="text-align:center">🙏 ระบบออกใบอนุโมทนาบัตร</h2>
+<input id="donorName" placeholder="ชื่อ-นามสกุล">
 <input id="amount" type="number" placeholder="จำนวนเงิน">
 <select id="purpose"></select>
-<button onclick="save()">บันทึก</button>
+<button onclick="saveDonation()">บันทึกข้อมูล</button>
 </div>
 
 <!-- LOGIN -->
-<div class="card hidden" id="login">
-<h3>Admin Login</h3>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-<button onclick="login()">เข้าสู่ระบบ</button>
+<div class="card hidden" id="loginSection">
+<h2 style="text-align:center">🔐 Admin Login</h2>
+<input id="adminUser" placeholder="Username">
+<input id="adminPass" type="password" placeholder="Password">
+<button onclick="loginAdmin()">เข้าสู่ระบบ</button>
+<button class="btn-secondary" onclick="backHome()">ยกเลิก</button>
 </div>
 
 <!-- ADMIN -->
-<div class="card hidden" id="admin">
-<h3>จัดการวัตถุประสงค์</h3>
-<input id="newPurpose" placeholder="เพิ่มวัตถุประสงค์">
-<button onclick="add()">เพิ่ม</button>
-<ul id="list"></ul>
-<button onclick="logout()">ออก</button>
+<div class="card hidden" id="adminSection">
+<h3>🛠️ จัดการวัตถุประสงค์</h3>
+<input id="newPurpose" placeholder="เพิ่มวัตถุประสงค์ใหม่">
+<button onclick="addPurpose()">➕ เพิ่ม</button>
+<ul id="purposeList"></ul>
+<button class="btn-secondary" onclick="logout()">ออกจากระบบ</button>
+</div>
+
 </div>
 
 <script>
-const SCRIPT_URL = "ใส่ URL Web App ของคุณตรงนี้";
+const scriptUrl="PUT_YOUR_WEBAPP_URL_HERE";
 
+/* ---------- PURPOSE (เดิม) ---------- */
+async function loadPurposes(){
+const r=await fetch(scriptUrl+"?action=getPurposes");
+const d=await r.json();
+purpose.innerHTML="";
+d.purposes.forEach(p=>{
+const o=document.createElement("option");
+o.textContent=o.value=p;
+purpose.appendChild(o);
+});
+}
+loadPurposes();
+
+/* ---------- ADMIN ---------- */
 function openLogin(){
-  form.classList.add("hidden");
-  login.classList.remove("hidden");
+formSection.classList.add("hidden");
+loginSection.classList.remove("hidden");
 }
 
-async function login(){
-  const r = await fetch(`${SCRIPT_URL}?action=login&user=${user.value}&pass=${pass.value}`);
-  const d = await r.json();
-  if(d.success){
-    login.classList.add("hidden");
-    admin.classList.remove("hidden");
-    loadAdmin();
-  } else alert("Login ไม่ถูกต้อง");
+function backHome(){
+loginSection.classList.add("hidden");
+formSection.classList.remove("hidden");
 }
 
-async function loadAdmin(){
-  const r = await fetch(`${SCRIPT_URL}?action=getPurposes`);
-  const d = await r.json();
-  list.innerHTML="";
-  d.purposes.forEach((p,i)=>{
-    list.innerHTML+=`<li>${p} <button onclick="del(${i+2})">ลบ</button></li>`;
-  });
+async function loginAdmin(){
+const r=await fetch(`${scriptUrl}?action=login&user=${adminUser.value}&pass=${adminPass.value}`);
+const d=await r.json();
+if(d.success){
+loginSection.classList.add("hidden");
+adminSection.classList.remove("hidden");
+loadAdminPurposes();
+}else alert("Login ไม่ถูกต้อง");
 }
 
-async function add(){
-  await fetch(SCRIPT_URL,{method:"POST",body:new URLSearchParams({
-    action:"addPurpose",purpose:newPurpose.value
-  })});
-  newPurpose.value="";
-  loadAdmin();
+async function loadAdminPurposes(){
+const r=await fetch(scriptUrl+"?action=getPurposes");
+const d=await r.json();
+purposeList.innerHTML="";
+d.purposes.forEach((p,i)=>{
+purposeList.innerHTML+=`
+<li>${p}
+<button onclick="deletePurpose(${i+2})">❌</button>
+</li>`;
+});
 }
 
-async function del(row){
-  await fetch(SCRIPT_URL,{method:"POST",body:new URLSearchParams({
-    action:"deletePurpose",row
-  })});
-  loadAdmin();
+async function addPurpose(){
+await fetch(scriptUrl,{
+method:"POST",
+body:new URLSearchParams({
+action:"addPurposeAdmin",
+purpose:newPurpose.value
+})
+});
+newPurpose.value="";
+loadAdminPurposes();
+loadPurposes();
+}
+
+async function deletePurpose(row){
+await fetch(scriptUrl,{
+method:"POST",
+body:new URLSearchParams({
+action:"deletePurposeAdmin",
+row:row
+})
+});
+loadAdminPurposes();
+loadPurposes();
 }
 
 function logout(){
-  admin.classList.add("hidden");
-  form.classList.remove("hidden");
+adminSection.classList.add("hidden");
+formSection.classList.remove("hidden");
 }
 
-async function loadPurposes(){
-  const r = await fetch(`${SCRIPT_URL}?action=getPurposes`);
-  const d = await r.json();
-  purpose.innerHTML="";
-  d.purposes.forEach(p=>purpose.innerHTML+=`<option>${p}</option>`);
+/* ---------- SAVE DONATION (เดิม) ---------- */
+function saveDonation(){
+fetch(scriptUrl,{
+method:"POST",
+body:new URLSearchParams({
+name:donorName.value,
+amount:amount.value,
+purpose:purpose.value
+})
+});
+alert("บันทึกข้อมูลเรียบร้อย");
 }
-
-async function save(){
-  await fetch(SCRIPT_URL,{method:"POST",body:new URLSearchParams({
-    action:"saveDonation",
-    name:name.value,
-    amount:amount.value,
-    purpose:purpose.value
-  })});
-  alert("บันทึกแล้ว");
-}
-
-loadPurposes();
 </script>
 </body>
 </html>
