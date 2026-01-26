@@ -11,7 +11,7 @@ body{
 background:linear-gradient(135deg,#667eea,#764ba2);
 padding:14px;min-height:100vh}
 
-.container{max-width:820px;margin:auto}
+.container{max-width:900px;margin:auto}
 
 /* ---------- Card ---------- */
 .card{
@@ -32,48 +32,69 @@ font-size:1.25em;border-radius:16px;
 border:none;font-weight:600;
 background:linear-gradient(135deg,#667eea,#764ba2);
 color:#fff}
-
 .btn-secondary{background:#6c757d}
 
 /* ---------- Theme selector ---------- */
 .theme-select{
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:10px;margin-top:10px}
+gap:12px;margin-bottom:18px}
 
 .theme-btn{
-padding:12px;
-border-radius:14px;
+padding:14px;
+border-radius:16px;
 border:3px solid #ddd;
 text-align:center;
 cursor:pointer;
 font-weight:600;
-background:#f8f8f8}
+background:#f8f8f8;
+transition:.2s}
 
+.theme-btn:hover{transform:translateY(-2px)}
 .theme-btn.active{
 border-color:#667eea;
 background:#eef1ff}
 
 /* ---------- Certificate ---------- */
+.preview-layout{
+display:grid;
+grid-template-columns:1fr;
+gap:20px}
+
 .certificate{
 position:relative;
-padding:36px 24px;
+padding:40px 28px;
 border-radius:20px;
 text-align:center;
 overflow:hidden}
 
+/* --- Theme : Thai --- */
 .theme-thai{
 background:#fffaf0;
 border:10px double #c19a6b}
+.theme-thai::before,
+.theme-thai::after{
+content:"";
+position:absolute;
+width:160px;height:160px;
+background:
+radial-gradient(circle at 30% 30%,#c19a6b 20%,transparent 21%),
+radial-gradient(circle at 70% 70%,#c19a6b 20%,transparent 21%);
+opacity:.15}
+.theme-thai::before{top:-40px;left:-40px}
+.theme-thai::after{bottom:-40px;right:-40px}
 
+/* --- Theme : Modern --- */
 .theme-modern{
 background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
 border:6px solid #6366f1}
 
+/* --- Theme : Nature --- */
 .theme-nature{
 background:linear-gradient(135deg,#f0fdf4,#dcfce7);
 border:6px solid #22c55e}
 
+/* ---------- Text ---------- */
 .cert-header{font-weight:bold}
 .cert-body{line-height:1.9}
 .cert-name{font-weight:bold}
@@ -85,7 +106,7 @@ border:6px solid #22c55e}
 .button-group{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:12px;margin-top:18px}
+gap:12px;margin-top:20px}
 </style>
 </head>
 
@@ -114,28 +135,26 @@ gap:12px;margin-top:18px}
 <button onclick="saveDonation()">💾 บันทึกข้อมูลการทำบุญ</button>
 </div>
 
-<!-- THEME + PREVIEW -->
+<!-- THEME + LIVE PREVIEW -->
 <div class="card hidden" id="themeSection">
-<div class="form-group">
-<label>เลือกรูปแบบใบอนุโมทนาบัตร</label>
+
+<h3>🎨 เลือกรูปแบบใบอนุโมทนาบัตร</h3>
+
 <div class="theme-select">
 <div class="theme-btn active" data-theme="theme-thai">🟡 ลายไทย</div>
 <div class="theme-btn" data-theme="theme-modern">🟣 ทันสมัย</div>
 <div class="theme-btn" data-theme="theme-nature">🌿 ธรรมชาติ</div>
 </div>
-</div>
 
-<button onclick="previewCert()">👀 แสดงใบอนุโมทนาบัตร</button>
-</div>
-
-<!-- PREVIEW -->
-<div class="card hidden" id="previewSection">
+<div class="preview-layout">
 <div id="certificate" class="certificate theme-thai"></div>
+</div>
 
 <div class="button-group">
 <button onclick="saveImage()">💾 บันทึกภาพ</button>
 <button class="btn-secondary" onclick="newDonation()">➕ เพิ่มรายการใหม่</button>
 </div>
+
 </div>
 
 </div>
@@ -187,21 +206,24 @@ fd.append("name",donorName.value);
 fd.append("amount",amount.value);
 fd.append("purpose",purpose.value);
 fetch(scriptUrl,{method:"POST",body:fd});
+
 formSection.classList.add("hidden");
 themeSection.classList.remove("hidden");
+renderCertificate();
 }
 
-/* ---------- Theme ---------- */
-document.querySelectorAll(".theme-btn").forEach(b=>{
-b.onclick=()=>{
-document.querySelectorAll(".theme-btn").forEach(x=>x.classList.remove("active"));
-b.classList.add("active");
-selectedTheme=b.dataset.theme;
+/* ---------- Theme click = LIVE ---------- */
+document.querySelectorAll(".theme-btn").forEach(btn=>{
+btn.onclick=()=>{
+document.querySelectorAll(".theme-btn").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+selectedTheme=btn.dataset.theme;
+renderCertificate();
 };
 });
 
-/* ---------- Preview ---------- */
-function previewCert(){
+/* ---------- Render cert ---------- */
+function renderCertificate(){
 const c=document.getElementById("certificate");
 c.className="certificate "+selectedTheme;
 c.innerHTML=`
@@ -224,8 +246,6 @@ ${Number(amount.value).toLocaleString()} บาท
 <br>🙏 สาธุ 🙏
 </div>
 `;
-themeSection.classList.add("hidden");
-previewSection.classList.remove("hidden");
 }
 
 /* ---------- Image ---------- */
@@ -243,7 +263,7 @@ function newDonation(){
 donorName.value="";
 amount.value="";
 formSection.classList.remove("hidden");
-previewSection.classList.add("hidden");
+themeSection.classList.add("hidden");
 }
 </script>
 </body>
