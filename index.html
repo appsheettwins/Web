@@ -34,6 +34,27 @@ background:linear-gradient(135deg,#667eea,#764ba2);
 color:#fff}
 .btn-secondary{background:#6c757d}
 
+/* ---------- Amount quick buttons ---------- */
+.amount-quick{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+gap:10px;
+margin-bottom:10px}
+
+.amount-quick button{
+padding:12px;
+font-size:1.1em;
+border-radius:12px;
+border:2px solid #ddd;
+background:#f8f8f8;
+color:#333;
+font-weight:600;
+cursor:pointer}
+
+.amount-quick button:hover{
+background:#eef1ff;
+border-color:#667eea}
+
 /* ---------- Theme selector ---------- */
 .theme-select{
 display:grid;
@@ -50,17 +71,11 @@ font-weight:600;
 background:#f8f8f8;
 transition:.2s}
 
-.theme-btn:hover{transform:translateY(-2px)}
 .theme-btn.active{
 border-color:#667eea;
 background:#eef1ff}
 
 /* ---------- Certificate ---------- */
-.preview-layout{
-display:grid;
-grid-template-columns:1fr;
-gap:20px}
-
 .certificate{
 position:relative;
 padding:40px 28px;
@@ -68,31 +83,9 @@ border-radius:20px;
 text-align:center;
 overflow:hidden}
 
-/* --- Theme : Thai --- */
-.theme-thai{
-background:#fffaf0;
-border:10px double #c19a6b}
-.theme-thai::before,
-.theme-thai::after{
-content:"";
-position:absolute;
-width:160px;height:160px;
-background:
-radial-gradient(circle at 30% 30%,#c19a6b 20%,transparent 21%),
-radial-gradient(circle at 70% 70%,#c19a6b 20%,transparent 21%);
-opacity:.15}
-.theme-thai::before{top:-40px;left:-40px}
-.theme-thai::after{bottom:-40px;right:-40px}
-
-/* --- Theme : Modern --- */
-.theme-modern{
-background:linear-gradient(135deg,#f3f4f6,#e5e7eb);
-border:6px solid #6366f1}
-
-/* --- Theme : Nature --- */
-.theme-nature{
-background:linear-gradient(135deg,#f0fdf4,#dcfce7);
-border:6px solid #22c55e}
+.theme-thai{background:#fffaf0;border:10px double #c19a6b}
+.theme-modern{background:linear-gradient(135deg,#f3f4f6,#e5e7eb);border:6px solid #6366f1}
+.theme-nature{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:6px solid #22c55e}
 
 /* ---------- Text ---------- */
 .cert-header{font-weight:bold}
@@ -124,7 +117,19 @@ gap:12px;margin-top:20px}
 
 <div class="form-group">
 <label>จำนวนเงิน (บาท)</label>
-<input id="amount" type="number">
+
+<!-- QUICK AMOUNT -->
+<div class="amount-quick">
+<button type="button" onclick="setAmount(100)">100</button>
+<button type="button" onclick="setAmount(200)">200</button>
+<button type="button" onclick="setAmount(300)">300</button>
+<button type="button" onclick="setAmount(500)">500</button>
+<button type="button" onclick="setAmount(1000)">1,000</button>
+<button type="button" onclick="setAmount(2000)">2,000</button>
+<button type="button" onclick="setAmount(3000)">3,000</button>
+</div>
+
+<input id="amount" type="number" placeholder="กรอกจำนวนเงินเองได้">
 </div>
 
 <div class="form-group">
@@ -135,9 +140,8 @@ gap:12px;margin-top:20px}
 <button onclick="saveDonation()">💾 บันทึกข้อมูลการทำบุญ</button>
 </div>
 
-<!-- THEME + LIVE PREVIEW -->
+<!-- THEME -->
 <div class="card hidden" id="themeSection">
-
 <h3>🎨 เลือกรูปแบบใบอนุโมทนาบัตร</h3>
 
 <div class="theme-select">
@@ -146,15 +150,12 @@ gap:12px;margin-top:20px}
 <div class="theme-btn" data-theme="theme-nature">🌿 ธรรมชาติ</div>
 </div>
 
-<div class="preview-layout">
 <div id="certificate" class="certificate theme-thai"></div>
-</div>
 
 <div class="button-group">
 <button onclick="saveImage()">💾 บันทึกภาพ</button>
 <button class="btn-secondary" onclick="newDonation()">➕ เพิ่มรายการใหม่</button>
 </div>
-
 </div>
 
 </div>
@@ -163,26 +164,29 @@ gap:12px;margin-top:20px}
 
 <script>
 const scriptUrl="https://script.google.com/macros/s/AKfycby9pH_JP8PpdGWzazdTjZw72hhsKnj_Uzd0TI-kHidhuK7qI4vmPMq-CspmaoHcKITQ/exec";
-
 let selectedTheme="theme-thai";
 let config={headerSize:2.4,bodySize:1.35,nameSize:1.7,amountSize:2,footerSize:1.2};
 
-/* ---------- Load ---------- */
 window.onload=()=>{
 loadPurposes();
 loadConfig();
 };
 
+/* ---------- Amount ---------- */
+function setAmount(val){
+amount.value=val;
+amount.focus();
+}
+
 /* ---------- Purpose ---------- */
 async function loadPurposes(){
 const r=await fetch(scriptUrl+"?action=getPurposes");
 const d=await r.json();
-const s=document.getElementById("purpose");
-s.innerHTML="";
+purpose.innerHTML="";
 (d.purposes||[]).forEach(p=>{
 const o=document.createElement("option");
 o.value=o.textContent=p;
-s.appendChild(o);
+purpose.appendChild(o);
 });
 }
 
@@ -195,7 +199,7 @@ if(d.config)config={...config,...d.config};
 }catch(e){}
 }
 
-/* ---------- Save donation ---------- */
+/* ---------- Save ---------- */
 function saveDonation(){
 if(!donorName.value||!amount.value){
 alert("กรุณากรอกข้อมูลให้ครบ");
@@ -212,7 +216,7 @@ themeSection.classList.remove("hidden");
 renderCertificate();
 }
 
-/* ---------- Theme click = LIVE ---------- */
+/* ---------- Theme ---------- */
 document.querySelectorAll(".theme-btn").forEach(btn=>{
 btn.onclick=()=>{
 document.querySelectorAll(".theme-btn").forEach(b=>b.classList.remove("active"));
@@ -222,30 +226,22 @@ renderCertificate();
 };
 });
 
-/* ---------- Render cert ---------- */
+/* ---------- Render ---------- */
 function renderCertificate(){
-const c=document.getElementById("certificate");
-c.className="certificate "+selectedTheme;
-c.innerHTML=`
-<div class="cert-header" style="font-size:${config.headerSize}em">
-ใบอนุโมทนาบัตร
-</div>
+certificate.className="certificate "+selectedTheme;
+certificate.innerHTML=`
+<div class="cert-header" style="font-size:${config.headerSize}em">ใบอนุโมทนาบัตร</div>
 <div class="cert-body" style="font-size:${config.bodySize}em">
 ขอเป็นสักขีพยานว่า
-<div class="cert-name" style="font-size:${config.nameSize}em">
-${donorName.value}
-</div>
+<div class="cert-name" style="font-size:${config.nameSize}em">${donorName.value}</div>
 ได้ร่วมทำบุญ ${purpose.value}
 <div class="cert-amount" style="font-size:${config.amountSize}em">
 ${Number(amount.value).toLocaleString()} บาท
 </div>
-ขออานิสงส์แห่งบุญนี้
 </div>
 <div class="cert-footer" style="font-size:${config.footerSize}em">
-วันที่ ${new Date().toLocaleDateString("th-TH")}
-<br>🙏 สาธุ 🙏
-</div>
-`;
+วันที่ ${new Date().toLocaleDateString("th-TH")}<br>🙏 สาธุ 🙏
+</div>`;
 }
 
 /* ---------- Image ---------- */
