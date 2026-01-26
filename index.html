@@ -10,6 +10,7 @@
 body{
 background:linear-gradient(135deg,#667eea,#764ba2);
 padding:14px;min-height:100vh}
+
 .container{max-width:820px;margin:auto}
 
 /* ---------- Card ---------- */
@@ -18,14 +19,10 @@ background:#fff;border-radius:22px;
 padding:28px;margin-bottom:20px;
 box-shadow:0 20px 45px rgba(0,0,0,.25)}
 
-/* ---------- Header ---------- */
-h1{text-align:center;color:#764ba2;margin-bottom:6px}
-.subtitle{text-align:center;color:#666;margin-bottom:22px}
-
 /* ---------- Form ---------- */
 label{font-size:1.15em;font-weight:600}
 .form-group{margin-bottom:18px}
-input,select,textarea{
+input,select{
 width:100%;padding:16px;
 font-size:1.35em;border-radius:14px;
 border:2px solid #e0e0e0}
@@ -36,48 +33,41 @@ border:none;font-weight:600;
 background:linear-gradient(135deg,#667eea,#764ba2);
 color:#fff}
 
-/* ---------- Theme selector ---------- */
-.theme-list{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-gap:12px;margin-top:10px}
-
-.theme{
-padding:16px;border-radius:14px;
-cursor:pointer;text-align:center;
-font-weight:600;border:3px solid transparent}
-
-.theme.active{border-color:#667eea}
-
 /* ---------- Certificate ---------- */
 .certificate{
-padding:32px;border-radius:20px;
-text-align:center;margin-top:20px}
+position:relative;
+padding:36px 24px;
+border-radius:20px;
+text-align:center;
+background:#fffaf0;
+border:10px double #c19a6b;
+overflow:hidden}
 
-.theme-gold{
-background:linear-gradient(135deg,#fff9e6,#ffe6b3);
-border:10px double #c19a6b}
+/* ลายไทย */
+.certificate::before,
+.certificate::after{
+content:"";
+position:absolute;
+width:140px;height:140px;
+background:
+radial-gradient(circle at 30% 30%,#c19a6b 20%,transparent 21%),
+radial-gradient(circle at 70% 70%,#c19a6b 20%,transparent 21%);
+opacity:.15}
 
-.theme-purple{
-background:linear-gradient(135deg,#ede7f6,#d1c4e9);
-border:8px solid #7e57c2}
+.certificate::before{top:-30px;left:-30px}
+.certificate::after{bottom:-30px;right:-30px}
 
-.theme-green{
-background:linear-gradient(135deg,#e8f5e9,#c8e6c9);
-border:8px solid #2e7d32}
-
-.cert-name{font-size:1.6em;font-weight:bold;margin:10px 0}
-.cert-amount{font-size:1.9em;font-weight:bold;margin:12px 0}
-
-/* ---------- Collection ---------- */
-.collection{
-display:grid;gap:14px;margin-top:20px}
-.collection .certificate{
-font-size:.9em;opacity:.9}
+.cert-header{color:#8b4513;font-weight:bold}
+.cert-body{line-height:1.9}
+.cert-name{font-weight:bold;color:#8b4513}
+.cert-amount{font-weight:bold;color:#d4af37}
+.cert-footer{margin-top:28px;color:#555}
 
 /* ---------- Utility ---------- */
 .hidden{display:none}
-.button-group{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.button-group{
+display:grid;grid-template-columns:1fr 1fr;
+gap:12px;margin-top:18px}
 .btn-secondary{background:#6c757d}
 </style>
 </head>
@@ -87,8 +77,7 @@ font-size:.9em;opacity:.9}
 
 <!-- FORM -->
 <div class="card" id="formSection">
-<h1>🙏 ระบบออกใบอนุโมทนาบัตร</h1>
-<p class="subtitle">เลือกแบบสวยงาม เก็บสะสมได้</p>
+<h2 style="text-align:center;color:#764ba2">🙏 ระบบออกใบอนุโมทนาบัตร</h2>
 
 <div class="form-group">
 <label>ชื่อ-นามสกุล</label>
@@ -109,75 +98,73 @@ font-size:.9em;opacity:.9}
 </select>
 </div>
 
-<div class="form-group">
-<label>เลือกแบบใบอนุโมทนาบัตร</label>
-<div class="theme-list">
-<div class="theme active" data-theme="theme-gold">✨ คลาสสิก</div>
-<div class="theme" data-theme="theme-purple">💜 โมเดิร์น</div>
-<div class="theme" data-theme="theme-green">🌿 ธรรมชาติ</div>
-</div>
-</div>
-
-<button onclick="previewCert()">👀 ดูตัวอย่าง</button>
+<button onclick="previewCert()">👀 แสดงใบอนุโมทนาบัตร</button>
 </div>
 
 <!-- PREVIEW -->
 <div class="card hidden" id="previewSection">
-<div id="certificate" class="certificate theme-gold"></div>
+<div id="certificate" class="certificate"></div>
 
 <div class="button-group">
-<button onclick="saveCert()">💾 บันทึก & เก็บสะสม</button>
+<button onclick="saveImage()">💾 บันทึกภาพ</button>
 <button class="btn-secondary" onclick="backForm()">⬅ กลับ</button>
 </div>
 </div>
 
-<!-- COLLECTION -->
-<div class="card hidden" id="collectionSection">
-<h2>📚 ใบอนุโมทนาบัตรที่บันทึกแล้ว</h2>
-<div class="collection" id="collection"></div>
-
-<button onclick="newCert()" style="margin-top:15px">➕ เพิ่มรายการใหม่</button>
 </div>
 
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
 const scriptUrl="https://script.google.com/macros/s/AKfycby9pH_JP8PpdGWzazdTjZw72hhsKnj_Uzd0TI-kHidhuK7qI4vmPMq-CspmaoHcKITQ/exec";
-let selectedTheme="theme-gold";
-
-/* theme click */
-document.querySelectorAll(".theme").forEach(t=>{
-t.onclick=()=>{
-document.querySelectorAll(".theme").forEach(x=>x.classList.remove("active"));
-t.classList.add("active");
-selectedTheme=t.dataset.theme;
+let config={
+headerSize:2.4,
+bodySize:1.35,
+nameSize:1.7,
+amountSize:2.0,
+footerSize:1.2
 };
-});
+
+window.onload=loadConfig;
+
+/* โหลดการตั้งค่าจาก Sheet */
+async function loadConfig(){
+try{
+const r=await fetch(scriptUrl+"?action=getConfig");
+const d=await r.json();
+if(d.config){config={...config,...d.config}}
+}catch(e){console.log("ใช้ค่าเริ่มต้น")}
+}
 
 function previewCert(){
 const c=document.getElementById("certificate");
-c.className="certificate "+selectedTheme;
 c.innerHTML=`
-<h2>ใบอนุโมทนาบัตร</h2>
-ขออนุโมทนาบุญแด่
-<div class="cert-name">${donorName.value}</div>
-ร่วมทำบุญ ${purpose.value}
-<div class="cert-amount">${Number(amount.value).toLocaleString()} บาท</div>
+<div class="cert-header" style="font-size:${config.headerSize}em">
+ใบอนุโมทนาบัตร
+</div>
+
+<div class="cert-body" style="font-size:${config.bodySize}em">
+ขอเป็นสักขีพยานว่า
+<div class="cert-name" style="font-size:${config.nameSize}em">
+${donorName.value}
+</div>
+ได้ร่วมทำบุญ ${purpose.value}
+<div class="cert-amount" style="font-size:${config.amountSize}em">
+${Number(amount.value).toLocaleString()} บาท
+</div>
+ขออานิสงส์แห่งบุญนี้
+จงเป็นปัจจัยแห่งความสุข ความเจริญ
+</div>
+
+<div class="cert-footer" style="font-size:${config.footerSize}em">
 วันที่ ${new Date().toLocaleDateString("th-TH")}
-🙏 สาธุ 🙏`;
+<br>🙏 สาธุ 🙏
+</div>
+`;
 formSection.classList.add("hidden");
 previewSection.classList.remove("hidden");
-}
 
-function saveCert(){
-saveToSheet();
-const clone=certificate.cloneNode(true);
-document.getElementById("collection").prepend(clone);
-previewSection.classList.add("hidden");
-collectionSection.classList.remove("hidden");
-}
-
-function saveToSheet(){
+/* บันทึกลง Sheet (เหมือนเดิม) */
 const fd=new FormData();
 fd.append("name",donorName.value);
 fd.append("amount",amount.value);
@@ -185,14 +172,17 @@ fd.append("purpose",purpose.value);
 fetch(scriptUrl,{method:"POST",body:fd});
 }
 
-function backForm(){
-previewSection.classList.add("hidden");
-formSection.classList.remove("hidden");
+function saveImage(){
+html2canvas(certificate,{scale:2}).then(canvas=>{
+const a=document.createElement("a");
+a.download="ใบอนุโมทนาบัตร.png";
+a.href=canvas.toDataURL("image/png");
+a.click();
+});
 }
 
-function newCert(){
-donorName.value=amount.value="";
-collectionSection.classList.add("hidden");
+function backForm(){
+previewSection.classList.add("hidden");
 formSection.classList.remove("hidden");
 }
 </script>
